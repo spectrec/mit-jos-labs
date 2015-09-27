@@ -146,9 +146,6 @@ i386_vm_init(void)
 	uint32_t cr0;
 	size_t n;
 
-	// Delete this line:
-	//panic("i386_vm_init: This function is not finished\n");
-
 	//////////////////////////////////////////////////////////////////////
 	// create initial page directory.
 	pgdir = boot_alloc(PGSIZE, PGSIZE);
@@ -176,9 +173,8 @@ i386_vm_init(void)
 	// programs will get read-only access to the array as well.
 	// You must allocate the array yourself.
 	// Your code goes here: 
-	pages = boot_alloc(sizeof(struct Page) * npage, PGSIZE);
-	memset(pages, 0, sizeof(struct Page) * npage);
-
+	n = ROUNDUP(npage*sizeof(struct Page), PGSIZE);
+	pages = boot_alloc(n, PGSIZE);
 
 	//////////////////////////////////////////////////////////////////////
 	// Now that we've allocated the initial kernel data structures, we set
@@ -193,7 +189,7 @@ i386_vm_init(void)
 
 	//////////////////////////////////////////////////////////////////////
 	// Now we set up virtual memory 
-	
+
 	//////////////////////////////////////////////////////////////////////
 	// Map 'pages' read-only by the user at linear address UPAGES
 	// Permissions:
@@ -201,6 +197,7 @@ i386_vm_init(void)
 	//      (ie. perm = PTE_U | PTE_P)
 	//    - pages itself -- kernel RW, user NONE
 	// Your code goes here:
+	boot_map_segment(pgdir, UPAGES, n, PADDR(pages), PTE_U);
 
 	//////////////////////////////////////////////////////////////////////
         // Use the physical memory that bootstack refers to as
@@ -211,6 +208,7 @@ i386_vm_init(void)
 	//     * [KSTACKTOP-PTSIZE, KSTACKTOP-KSTKSIZE) -- not backed => faults
 	//     Permissions: kernel RW, user NONE
 	// Your code goes here:
+	boot_map_segment(pgdir, KSTACKTOP-KSTKSIZE, KSTKSIZE, PADDR(bootstack), PTE_W);
 
 	//////////////////////////////////////////////////////////////////////
 	// Map all of physical memory at KERNBASE. 
@@ -220,6 +218,7 @@ i386_vm_init(void)
 	// we just set up the mapping anyway.
 	// Permissions: kernel RW, user NONE
 	// Your code goes here: 
+	boot_map_segment(pgdir, KERNBASE, 0xffffffff - KERNBASE + 1, 0, PTE_W);
 
 	// Check that the initial page directory has been set up correctly.
 	check_boot_pgdir();
@@ -639,12 +638,12 @@ page_insert(pde_t *pgdir, struct Page *pp, void *va, int perm)
 static void
 boot_map_segment(pde_t *pgdir, uintptr_t la, size_t size, physaddr_t pa, int perm)
 {
-	uintptr_t end = la + size;
+	uintptr_t i;
 
-	for (; la < end; la += PGSIZE, pa += PGSIZE) {
-		pte_t *pte = pgdir_walk(pgdir, (void *)la, 1);
+	for (i = 0; i < size; i += PGSIZE) {
+		pte_t *pte = pgdir_walk(pgdir, (void *)(la + i), 1);
 
-		*pte = PTE_ADDR(pa) | PTE_P | perm;
+		*pte = PTE_ADDR(pa + i) | PTE_P | perm;
 	}
 }
 
