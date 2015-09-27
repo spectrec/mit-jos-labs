@@ -121,8 +121,10 @@ boot_alloc(uint32_t n, uint32_t align)
 	//	Step 2: save current value of boot_freemem as allocated chunk
 	//	Step 3: increase boot_freemem to record allocation
 	//	Step 4: return allocated chunk
+	v = ROUNDUP(boot_freemem, align);
+	boot_freemem = (char *)v + n;
 
-	return NULL;
+	return v;
 }
 
 // Set up a two-level page table:
