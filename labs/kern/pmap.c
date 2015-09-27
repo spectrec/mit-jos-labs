@@ -147,7 +147,7 @@ i386_vm_init(void)
 	size_t n;
 
 	// Delete this line:
-	panic("i386_vm_init: This function is not finished\n");
+	//panic("i386_vm_init: This function is not finished\n");
 
 	//////////////////////////////////////////////////////////////////////
 	// create initial page directory.
@@ -176,6 +176,8 @@ i386_vm_init(void)
 	// programs will get read-only access to the array as well.
 	// You must allocate the array yourself.
 	// Your code goes here: 
+	pages = boot_alloc(sizeof(struct Page) * npage, PGSIZE);
+	memset(pages, 0, sizeof(struct Page) * npage);
 
 
 	//////////////////////////////////////////////////////////////////////
