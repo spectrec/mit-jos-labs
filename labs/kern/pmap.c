@@ -427,17 +427,47 @@ page_init(void)
 	//     in case we ever need them.  (Currently we don't, but...)
 	//  2) Mark the rest of base memory as free.
 	//  3) Then comes the IO hole [IOPHYSMEM, EXTPHYSMEM).
-	//     Mark it as in use so that it can never be allocated.      
+	//     Mark it as in use so that it can never be allocated.
 	//  4) Then extended memory [EXTPHYSMEM, ...).
 	//     Some of it is in use, some is free. Where is the kernel?
 	//     Which pages are used for page tables and other data structures?
 	//
 	// Change the code to reflect this.
-	int i;
+	int i, last_kernel_page;
+
+	// make page 0 as in use
+	pages[0].pp_ref = 1;
+
+	// mark the rest of base memory as free
 	LIST_INIT(&page_free_list);
-	for (i = 0; i < npage; i++) {
-		pages[i].pp_ref = 0;
+	for (i = 1; i < npage; i++) {
 		LIST_INSERT_HEAD(&page_free_list, &pages[i], pp_link);
+		pages[i].pp_ref = 0;
+	}
+
+	// make hole [IOPHYSMEM, EXTPHYSMEM).
+	for (i = 1; i < npage; i++) {
+		void *va = page2kva(&pages[i]);
+
+		if (va < KADDR(IOPHYSMEM))
+			continue;
+
+		if (va >= KADDR(EXTPHYSMEM))
+			break;
+
+		LIST_REMOVE(&pages[i], pp_link);
+		pages[i].pp_ref = 1;
+	}
+
+	// extended memory
+	last_kernel_page = page2ppn(pa2page(PADDR(boot_freemem)));
+	cprintf("Last kernel page is %d (total: %d)\n", last_kernel_page, npage);
+
+	for (; i < last_kernel_page; i++) {
+		assert(i < npage);
+
+		LIST_REMOVE(&pages[i], pp_link);
+		pages[i].pp_ref = 1;
 	}
 }
 
@@ -469,8 +499,18 @@ page_initpp(struct Page *pp)
 int
 page_alloc(struct Page **pp_store)
 {
-	// Fill this function in
-	return -E_NO_MEM;
+	struct Page *page;
+
+	page = LIST_FIRST(&page_free_list);
+	if (page == NULL)
+		return -E_NO_MEM;
+
+	LIST_REMOVE(page, pp_link);
+
+	page_initpp(page);
+	*pp_store = page;
+
+	return 0;
 }
 
 //
@@ -480,7 +520,8 @@ page_alloc(struct Page **pp_store)
 void
 page_free(struct Page *pp)
 {
-	// Fill this function in
+	assert(pp->pp_ref == 0);
+	LIST_INSERT_HEAD(&page_free_list, pp, pp_link);
 }
 
 //
