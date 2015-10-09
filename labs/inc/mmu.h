@@ -288,7 +288,7 @@ struct Gatedesc {
 }
 
 // Set up a call gate descriptor.
-#define SETCALLGATE(gate, ss, off, dpl)           	        \
+#define SETCALLGATE(gate, ss, off, dpl)				\
 {								\
 	(gate).gd_off_15_0 = (uint32_t) (off) & 0xffff;		\
 	(gate).gd_ss = (ss);					\

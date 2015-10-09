@@ -40,10 +40,56 @@
 /*
  * Lab 3: Your code here for generating entry points for the different traps.
  */
+// http://css.csail.mit.edu/6.858/2011/readings/i386.pdf (page 173)
+// http://download.intel.com/design/processor/manuals/253668.pdf (page 259)
+TRAPHANDLER_NOEC(trap_entry_divide_error, T_DIVIDE);
+TRAPHANDLER_NOEC(trap_entry_debug_exception, T_DEBUG);
+TRAPHANDLER_NOEC(trap_entry_non_maskable_interrupt, T_NMI);
+TRAPHANDLER_NOEC(trap_entry_breakpoint, T_BRKPT);
+TRAPHANDLER_NOEC(trap_entry_overflow, T_OFLOW);
+TRAPHANDLER_NOEC(trap_entry_bounds_check, T_BOUND);
+TRAPHANDLER_NOEC(trap_entry_illegal_opcode, T_ILLOP);
+TRAPHANDLER_NOEC(trap_entry_device_not_available, T_DEVICE);
+TRAPHANDLER(trap_entry_double_fault, T_DBLFLT);
+TRAPHANDLER(trap_entry_invalid_task_switch_segment, T_TSS);
+TRAPHANDLER(trap_entry_segment_not_present, T_SEGNP);
+TRAPHANDLER(trap_entry_stack_exception, T_STACK);
+TRAPHANDLER(trap_entry_general_protection_fault, T_GPFLT);
+TRAPHANDLER(trap_entry_page_fault, T_PGFLT);
+TRAPHANDLER_NOEC(trap_entry_floating_point_error, T_FPERR);
+TRAPHANDLER(trap_entry_aligment_check, T_ALIGN);
+TRAPHANDLER_NOEC(trap_entry_machine_check, T_MCHK);
+TRAPHANDLER_NOEC(trap_entry_simd_floating_point_error, T_SIMDERR);
 
-
+TRAPHANDLER_NOEC(trap_entry_system_call, T_SYSCALL);
 
 /*
  * Lab 3: Your code here for _alltraps
  */
-	
+_alltraps:
+	// fill in struct `Trapfname'
+	pushl %ds
+	pushl %es
+	pushal
+
+	// prepare for call `trap'
+	movl $GD_KD, %eax
+	movw %ax, %ds
+	movw %ax, %es
+	pushl %esp
+
+	call trap
+
+	// Should not be here
+_retry:
+	jmp _retry
+
+	/*
+	//restore registers
+	popl %esp
+	popal
+	popl %es
+	popl %ds
+
+	iret
+	*/
