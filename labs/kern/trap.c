@@ -152,6 +152,21 @@ trap_dispatch(struct Trapframe *tf)
 	// LAB 3: Your code here.
 	if (tf->tf_trapno == T_PGFLT)
 		return page_fault_handler(tf);
+	else if (tf->tf_trapno == T_SYSCALL) {
+		int32_t ret, num = tf->tf_regs.reg_eax;
+		uint32_t args[] = {
+			tf->tf_regs.reg_edx,
+			tf->tf_regs.reg_ecx,
+			tf->tf_regs.reg_ebx,
+			tf->tf_regs.reg_edi,
+			tf->tf_regs.reg_esi,
+		};
+
+		ret = syscall(num, args[0], args[1], args[2], args[3], args[4]);
+		asm volatile("movl %0,%%eax" : : "m" (ret));
+
+		return;
+	}
 
 	// Unexpected trap: The user process or the kernel has a bug.
 	print_trapframe(tf);

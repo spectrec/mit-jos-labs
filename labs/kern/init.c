@@ -43,7 +43,7 @@ i386_init(void)
 	ENV_CREATE2(TEST, TESTSIZE);
 #else
 	// Touch all you want.
-	//ENV_CREATE(user_hello);
+	ENV_CREATE(user_hello);
 
 	// interrupts
 	//ENV_CREATE(user_divzero);
@@ -51,7 +51,7 @@ i386_init(void)
 	//ENV_CREATE(user_badsegment);
 
 	// page fault test
-	ENV_CREATE(user_faultread);
+	//ENV_CREATE(user_faultread);
 	//ENV_CREATE(user_faultreadkernel);
 	//ENV_CREATE(user_faultwrite);
 	//ENV_CREATE(user_faultwritekernel);
