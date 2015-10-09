@@ -44,9 +44,17 @@ i386_init(void)
 #else
 	// Touch all you want.
 	//ENV_CREATE(user_hello);
-	ENV_CREATE(user_divzero);
+
+	// interrupts
+	//ENV_CREATE(user_divzero);
 	//ENV_CREATE(user_softint);
 	//ENV_CREATE(user_badsegment);
+
+	// page fault test
+	ENV_CREATE(user_faultread);
+	//ENV_CREATE(user_faultreadkernel);
+	//ENV_CREATE(user_faultwrite);
+	//ENV_CREATE(user_faultwritekernel);
 #endif // TEST*
 
 

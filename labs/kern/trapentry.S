@@ -78,18 +78,4 @@ _alltraps:
 	movw %ax, %es
 	pushl %esp
 
-	call trap
-
-	// Should not be here
-_retry:
-	jmp _retry
-
-	/*
-	//restore registers
-	popl %esp
-	popal
-	popl %es
-	popl %ds
-
-	iret
-	*/
+	call trap // should not return
