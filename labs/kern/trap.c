@@ -163,7 +163,7 @@ trap_dispatch(struct Trapframe *tf)
 		};
 
 		ret = syscall(num, args[0], args[1], args[2], args[3], args[4]);
-		asm volatile("movl %0,%%eax" : : "m" (ret));
+		tf->tf_regs.reg_eax = ret;
 
 		return;
 	}
@@ -181,6 +181,8 @@ trap_dispatch(struct Trapframe *tf)
 void
 trap(struct Trapframe *tf)
 {
+	uint8_t cpl;
+
 	cprintf("Incoming TRAP frame at %p\n", tf);
 
 	if ((tf->tf_cs & 3) == 3) {
@@ -193,7 +195,7 @@ trap(struct Trapframe *tf)
 		// The trapframe on the stack should be ignored from here on.
 		tf = &curenv->env_tf;
 	}
-	
+
 	// Dispatch based on what type of trap occurred
 	trap_dispatch(tf);
 
@@ -212,8 +214,12 @@ page_fault_handler(struct Trapframe *tf)
 	fault_va = rcr2();
 
 	// Handle kernel-mode page faults.
-	
+
 	// LAB 3: Your code here.
+	if ((tf->tf_cs & 3) != 3) {
+		assert((tf->tf_cs) == 0);
+		panic("page fault inside kernel");
+	}
 
 	// We've already handled kernel-mode exceptions, so if we get here,
 	// the page fault happened in user mode.

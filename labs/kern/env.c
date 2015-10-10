@@ -164,7 +164,7 @@ env_alloc(struct Env **newenv_store, envid_t parent_id)
 	if (generation <= 0)	// Don't create a negative env_id.
 		generation = 1 << ENVGENSHIFT;
 	e->env_id = generation | (e - envs);
-	
+
 	// Set the basic status variables.
 	e->env_parent_id = parent_id;
 	e->env_status = ENV_RUNNABLE;
