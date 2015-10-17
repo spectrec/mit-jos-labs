@@ -186,6 +186,8 @@ trap_dispatch(struct Trapframe *tf)
 	}
 
 	// Unexpected trap: The user process or the kernel has a bug.
+	cprintf("unexpeted trap: envid == [%08x]\n", curenv->env_id);
+
 	print_trapframe(tf);
 	if (tf->tf_cs == GD_KT)
 		panic("unhandled trap in kernel");
