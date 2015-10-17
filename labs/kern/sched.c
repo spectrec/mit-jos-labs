@@ -9,6 +9,8 @@
 void
 sched_yield(void)
 {
+	int last_env_idx, i, j;
+
 	// Implement simple round-robin scheduling.
 	// Search through 'envs' for a runnable environment,
 	// in circular fashion starting after the previously running env,
@@ -19,6 +21,16 @@ sched_yield(void)
 	// unless NOTHING else is runnable.
 
 	// LAB 4: Your code here.
+	last_env_idx = curenv == NULL ? 0 : ENVX(curenv->env_id);
+	for (i = last_env_idx + 1; i != last_env_idx; i = (i + 1) % NENV) {
+		if (i == 0) // skip idle
+			continue;
+		if (envs[i].env_status != ENV_RUNNABLE)
+			continue;
+
+		last_env_idx = i;
+		env_run(&envs[i]);
+	}
 
 	// Run the special idle environment when nothing else is runnable.
 	if (envs[0].env_status == ENV_RUNNABLE)
