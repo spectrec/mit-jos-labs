@@ -64,16 +64,37 @@ _pgfault_upcall:
 	//   What registers are available for intermediate calculations?
 	//
 	// LAB 4: Your code here.
+	addl $8, %esp			// skip fault_va and error_code
+
+	movl %esp, %ebx // store current `esp'
+
+	movl 40(%esp), %ecx // store trap-time `esp'
+	movl 32(%esp), %edx // store trap-time `eip'
+
+	movl %ecx, %esp
+
+	pushl %edx // store eip for return
+	movl %esp, %ecx
+
+	movl %ebx, %esp // restore stack
+	movl %ecx, 40(%esp)
 
 	// Restore the trap-time registers.
 	// LAB 4: Your code here.
+	popal
+
+	// ignore trap-time eip
+	addl $4, %esp
 
 	// Restore eflags from the stack.
 	// LAB 4: Your code here.
+	popfl
 
 	// Switch back to the adjusted trap-time stack.
 	// LAB 4: Your code here.
+	popl %esp
 
 	// Return to re-execute the instruction that faulted.
 	// LAB 4: Your code here.
+	ret
 

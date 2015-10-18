@@ -325,7 +325,7 @@ load_icode(struct Env *e, uint8_t *binary, size_t size)
 		panic("page_alloc failed: %e", r);
 
 	if ((r = page_insert(e->env_pgdir, stack, (void *)(USTACKTOP - PGSIZE), PTE_U | PTE_W)) != 0)
-		panic("page_insert failed: %e");
+		panic("page_insert failed: %e", r);
 }
 
 //
