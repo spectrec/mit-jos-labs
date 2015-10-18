@@ -236,7 +236,7 @@ page_fault_handler(struct Trapframe *tf)
 
 	// LAB 3: Your code here.
 	if ((tf->tf_cs & 3) != 3) {
-		assert((tf->tf_cs) == 0);
+		assert((tf->tf_cs & 3) == 0);
 		panic("page fault inside kernel");
 	}
 

@@ -98,7 +98,7 @@ sys_exofork(void)
 		return ret;
 
 	child->env_status = ENV_NOT_RUNNABLE;
-	memmove(&child->env_tf, &curenv->env_tf, sizeof(child->env_tf));
+	child->env_tf = curenv->env_tf;
 	child->env_tf.tf_regs.reg_eax = 0;
 
 	cprintf("exofork: [%08x] -> [%08x]\n", curenv->env_id, child->env_id);
@@ -173,7 +173,6 @@ sys_env_set_pgfault_upcall(envid_t envid, void *func)
 	if ((ret = envid2env(envid, &e, 1)) != 0)
 		return ret;
 
-	assert(e->env_pgfault_upcall == NULL);
 	e->env_pgfault_upcall = func;
 
 	return 0;
@@ -258,7 +257,7 @@ sys_page_map(envid_t srcenvid, void *srcva,
 	//   check the current permissions on the page.
 	struct Env *src_env, *dst_env;
 	struct Page *src_page;
-	pte_t *src_pte, *dst_pte;
+	pte_t *src_pte;
 	int ret;
 
 	if ((uint32_t)srcva >= UTOP || (uint32_t)srcva != ROUNDDOWN((uint32_t)srcva, PGSIZE) ||

@@ -633,7 +633,7 @@ page_insert(pde_t *pgdir, struct Page *pp, void *va, int perm)
 
 	if (PTE_ADDR(*pte) == page2pa(pp)) {
 		// same pgdir, same pte, same pp
-		*pte |= perm;
+		*pte = page2pa(pp) | perm | PTE_P;
 
 		return 0;
 	}
@@ -773,8 +773,15 @@ user_mem_check(struct Env *env, const void *va, size_t len, int perm)
 			return -E_FAULT;
 
 		pte_t *pte = pgdir_walk(env->env_pgdir, va + i, 0);
-		if (pte == NULL || (*pte & perm) != perm)
+		if (pte == NULL) {
+			cprintf("[%08x] no pte for %p\n", env->env_id, va + i);
 			return -E_FAULT;
+		}
+		if ((*pte & perm) != perm) {
+			cprintf("[%08x] invalid permissions for %p (expected %08x, actual %08x)\n",
+				env->env_id, (va + i), perm, (*pte & perm));
+			return -E_FAULT;
+		}
 
 		user_mem_check_addr = (uint32_t)(va + i);
 	}
@@ -792,9 +799,11 @@ user_mem_check(struct Env *env, const void *va, size_t len, int perm)
 void
 user_mem_assert(struct Env *env, const void *va, size_t len, int perm)
 {
-	if (user_mem_check(env, va, len, perm | PTE_U) < 0) {
+	int r;
+
+	if ((r = user_mem_check(env, va, len, perm | PTE_U)) < 0) {
 		cprintf("[%08x] user_mem_check assertion failure for "
-			"va %08x\n", env->env_id, user_mem_check_addr);
+			"va %08x\n: %e", env->env_id, user_mem_check_addr, r);
 		env_destroy(env);	// may not return
 	}
 }
