@@ -54,7 +54,7 @@ GCCPREFIX := $(shell if i386-jos-elf-objdump -i 2>&1 | grep '^elf32-i386$$' >/de
 endif
 
 # try to infer the correct QEMU
-ifndef QEMU
+ifdef QEMU
 QEMU := $(shell if which qemu > /dev/null; \
 	then echo qemu; exit; \
 	else \
@@ -85,8 +85,7 @@ PERL	:= perl
 
 # Compiler flags
 # -fno-builtin is required to avoid refs to undefined functions in the kernel.
-# Only optimize to -O1 to discourage inlining, which complicates backtraces.
-CFLAGS := $(CFLAGS) $(DEFS) $(LABDEFS) -O1 -fno-builtin -I$(TOP) -MD 
+CFLAGS := $(CFLAGS) $(DEFS) $(LABDEFS) -fno-builtin -I$(TOP) -MD
 CFLAGS += -Wall -Wno-format -Wno-unused -Werror -gstabs -m32
 
 # Add -fno-stack-protector if the option exists.
@@ -120,9 +119,13 @@ KERN_CFLAGS := $(CFLAGS) -DJOS_KERNEL -gstabs
 USER_CFLAGS := $(CFLAGS) -DJOS_USER -gstabs
 
 
+
+
 # Include Makefrags for subdirectories
 include boot/Makefrag
 include kern/Makefrag
+include lib/Makefrag
+include user/Makefrag
 
 
 IMAGES = $(OBJDIR)/kern/kernel.img

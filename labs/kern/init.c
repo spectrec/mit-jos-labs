@@ -8,6 +8,10 @@
 #include <kern/console.h>
 #include <kern/pmap.h>
 #include <kern/kclock.h>
+#include <kern/env.h>
+#include <kern/trap.h>
+#include <kern/sched.h>
+#include <kern/picirq.h>
 
 
 void
@@ -24,13 +28,66 @@ i386_init(void)
 	// Can't call cprintf until after we do this!
 	cons_init();
 
+	cprintf("6828 decimal is %o octal!\n", 6828);
+
 	// Lab 2 memory management initialization functions
 	i386_detect_memory();
 	i386_vm_init();
 
-	// Drop into the kernel monitor.
-	while (1)
-		monitor(NULL);
+	// Lab 3 user environment initialization functions
+	env_init();
+	idt_init();
+
+	// Lab 4 multitasking initialization functions
+	pic_init();
+	kclock_init();
+
+	// Should always have an idle process as first one.
+	ENV_CREATE(user_idle);
+
+#if defined(TEST)
+	// Don't touch -- used by grading script!
+	ENV_CREATE2(TEST, TESTSIZE)
+#else
+	// Touch all you want.
+/*
+	ENV_CREATE(user_hello);
+
+	// interrupts
+	//ENV_CREATE(user_divzero);
+	//ENV_CREATE(user_softint);
+	//ENV_CREATE(user_badsegment);
+
+	// page fault test
+	//ENV_CREATE(user_faultread);
+	//ENV_CREATE(user_faultreadkernel);
+	//ENV_CREATE(user_faultwrite);
+	//ENV_CREATE(user_faultwritekernel);
+
+	// user mem check
+	//ENV_CREATE(user_buggyhello);
+	//ENV_CREATE(user_evilhello);
+*/
+	/*
+	ENV_CREATE(user_yield);
+	ENV_CREATE(user_yield);
+	*/
+
+	//ENV_CREATE(user_primes);
+	//ENV_CREATE(user_dumbfork);
+
+	//ENV_CREATE(user_faultread);
+	//ENV_CREATE(user_faultdie);
+	//ENV_CREATE(user_faultalloc);
+	//ENV_CREATE(user_faultallocbad);
+
+	//ENV_CREATE(user_forktree);
+
+	ENV_CREATE(user_spin);
+#endif // TEST*
+
+	// Schedule and run the first user environment!
+	sched_yield();
 }
 
 
