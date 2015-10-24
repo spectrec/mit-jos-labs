@@ -64,6 +64,9 @@ TRAPHANDLER_NOEC(trap_entry_simd_floating_point_error, T_SIMDERR);
 
 TRAPHANDLER_NOEC(trap_entry_system_call, T_SYSCALL);
 
+// interrupts (no error code, no dpl check)
+TRAPHANDLER_NOEC(irq_entry_timer, IRQ_OFFSET);
+
 /*
  * Lab 3: Your code here for _alltraps
  */

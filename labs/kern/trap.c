@@ -83,6 +83,8 @@ idt_init(void)
 	extern void trap_entry_simd_floating_point_error();
 	extern void trap_entry_system_call();
 
+	extern void irq_entry_timer();
+
 	// LAB 3: Your code here.
 	SETGATE(idt[T_DIVIDE], 0, GD_KT, trap_entry_divide_error, 0);
 	SETGATE(idt[T_DEBUG], 0, GD_KT, trap_entry_debug_exception, 0);
@@ -103,6 +105,9 @@ idt_init(void)
 	SETGATE(idt[T_MCHK], 0, GD_KT, trap_entry_machine_check, 0);
 	SETGATE(idt[T_SIMDERR], 0, GD_KT, trap_entry_simd_floating_point_error, 0);
 	SETGATE(idt[T_SYSCALL], 0, GD_KT, trap_entry_system_call, 3);
+
+	// irq's
+	SETGATE(idt[IRQ_OFFSET], 0, GD_KT, irq_entry_timer, 0);
 
 	// Setup a TSS so that we get the right stack
 	// when we trap to the kernel.
@@ -157,7 +162,8 @@ trap_dispatch(struct Trapframe *tf)
 	// LAB 3: Your code here.
 	if (tf->tf_trapno == T_PGFLT)
 		return page_fault_handler(tf);
-	else if (tf->tf_trapno == T_SYSCALL) {
+
+	if (tf->tf_trapno == T_SYSCALL) {
 		int32_t ret, num = tf->tf_regs.reg_eax;
 		uint32_t args[] = {
 			tf->tf_regs.reg_edx,
@@ -175,6 +181,8 @@ trap_dispatch(struct Trapframe *tf)
 
 	// Handle clock interrupts.
 	// LAB 4: Your code here.
+	if (tf->tf_trapno == IRQ_OFFSET)
+		return sched_yield();
 
 	// Handle spurious interupts
 	// The hardware sometimes raises these because of noise on the

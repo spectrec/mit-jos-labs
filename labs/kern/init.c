@@ -81,7 +81,9 @@ i386_init(void)
 	//ENV_CREATE(user_faultalloc);
 	//ENV_CREATE(user_faultallocbad);
 
-	ENV_CREATE(user_forktree);
+	//ENV_CREATE(user_forktree);
+
+	ENV_CREATE(user_spin);
 #endif // TEST*
 
 	// Schedule and run the first user environment!
