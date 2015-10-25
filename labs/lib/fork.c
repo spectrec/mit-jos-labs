@@ -23,7 +23,8 @@ pgfault(struct UTrapframe *utf)
 	// Hint:
 	//   Use the read-only page table mappings at vpt
 	//   (see <inc/memlayout.h>).
-	cprintf("[%08x] pgfault on %08x\n", env->env_id, addr);
+
+	//cprintf("[%08x] pgfault on %08x\n", env->env_id, addr);
 
 	// LAB 4: Your code here.
 	if ((err & FEC_WR) == 0)

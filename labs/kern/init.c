@@ -50,8 +50,8 @@ i386_init(void)
 	ENV_CREATE2(TEST, TESTSIZE)
 #else
 	// Touch all you want.
-/*
-	ENV_CREATE(user_hello);
+
+	//ENV_CREATE(user_hello);
 
 	// interrupts
 	//ENV_CREATE(user_divzero);
@@ -67,13 +67,12 @@ i386_init(void)
 	// user mem check
 	//ENV_CREATE(user_buggyhello);
 	//ENV_CREATE(user_evilhello);
-*/
+
 	/*
 	ENV_CREATE(user_yield);
 	ENV_CREATE(user_yield);
 	*/
 
-	//ENV_CREATE(user_primes);
 	//ENV_CREATE(user_dumbfork);
 
 	//ENV_CREATE(user_faultread);
@@ -83,7 +82,10 @@ i386_init(void)
 
 	//ENV_CREATE(user_forktree);
 
-	ENV_CREATE(user_spin);
+	//ENV_CREATE(user_spin);
+
+	ENV_CREATE(user_pingpong);
+	//ENV_CREATE(user_primes);
 #endif // TEST*
 
 	// Schedule and run the first user environment!

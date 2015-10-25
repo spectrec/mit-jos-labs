@@ -101,7 +101,7 @@ sys_exofork(void)
 	child->env_tf = curenv->env_tf;
 	child->env_tf.tf_regs.reg_eax = 0;
 
-	cprintf("exofork: [%08x] -> [%08x]\n", curenv->env_id, child->env_id);
+	//cprintf("exofork: [%08x] -> [%08x]\n", curenv->env_id, child->env_id);
 
 	return child->env_id;
 }
@@ -347,8 +347,43 @@ sys_page_unmap(envid_t envid, void *va)
 static int
 sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 {
-	// LAB 4: Your code here.
-	panic("sys_ipc_try_send not implemented");
+	struct Env *dstenv;
+	struct Page *p;
+	pte_t *pte;
+	int r = 0;
+
+	if ((r = envid2env(envid, &dstenv, 0)) != 0)
+		return -E_BAD_ENV;
+
+	if (dstenv->env_ipc_recving == 0)
+		return -E_IPC_NOT_RECV;
+
+	dstenv->env_ipc_recving = 0;
+	dstenv->env_ipc_from = curenv->env_id;
+	dstenv->env_ipc_value = value;
+	dstenv->env_ipc_perm = 0;
+
+	if (srcva < (void *)UTOP && dstenv->env_ipc_dstva < (void *)UTOP) {
+		if (srcva != ROUNDDOWN(srcva, PGSIZE))
+			return -E_INVAL;
+		if ((perm & ~PTE_USER) != 0)
+			return -E_INVAL;
+
+		if ((p = page_lookup(curenv->env_pgdir, srcva, &pte)) == NULL)
+			return -E_INVAL;
+		if ((perm & PTE_W) != 0 && (*pte & PTE_W) == 0)
+			return -E_INVAL;
+
+		if ((r = page_insert(dstenv->env_pgdir, p, dstenv->env_ipc_dstva, perm)) != 0)
+			return r;
+
+		dstenv->env_ipc_perm = perm;
+		r = 1; // page sent
+	}
+
+	dstenv->env_status = ENV_RUNNABLE;
+
+	return r;
 }
 
 // Block until a value is ready.  Record that you want to receive
@@ -365,8 +400,25 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 static int
 sys_ipc_recv(void *dstva)
 {
-	// LAB 4: Your code here.
-	panic("sys_ipc_recv not implemented");
+	if (dstva < (void *)UTOP) {
+		if (dstva != ROUNDDOWN(dstva, PGSIZE))
+			return -E_INVAL;
+
+		curenv->env_ipc_dstva = dstva;
+	}
+
+	// we are waiting for a msg
+	curenv->env_ipc_recving = 1;
+
+	// wait for new data
+	curenv->env_status = ENV_NOT_RUNNABLE;
+
+	// return value of the syscall
+	curenv->env_tf.tf_regs.reg_eax = 0;
+
+	sched_yield();
+
+	// to make gcc happy
 	return 0;
 }
 
@@ -402,6 +454,10 @@ syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, 
 		return sys_page_unmap((envid_t)a1, (void *)a2);
 	case SYS_env_set_pgfault_upcall:
 		return sys_env_set_pgfault_upcall((envid_t)a1, (void *)a2);
+	case SYS_ipc_try_send:
+		return sys_ipc_try_send((envid_t)a1, (uint32_t)a2, (void *)a3, (unsigned int)a4);
+	case SYS_ipc_recv:
+		return sys_ipc_recv((void *)a1);;
 	};
 
 	return -E_INVAL;

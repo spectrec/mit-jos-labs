@@ -24,6 +24,5 @@ umain(void)
 		if (i == 10)
 			return;
 	}
-		
 }
 
