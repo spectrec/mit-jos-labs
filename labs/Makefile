@@ -86,7 +86,7 @@ PERL	:= perl
 # Compiler flags
 # -fno-builtin is required to avoid refs to undefined functions in the kernel.
 CFLAGS := $(CFLAGS) $(DEFS) $(LABDEFS) -fno-builtin -I$(TOP) -MD
-CFLAGS += -Wall -Wno-format -Wno-unused -Werror -gstabs -m32
+CFLAGS += -Wall -Wno-format -Wno-unused -Werror -gstabs -m32 -std=gnu99
 
 # Add -fno-stack-protector if the option exists.
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
